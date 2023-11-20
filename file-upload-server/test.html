@@ -1,0 +1,60 @@
+<html>
+<head>
+    <title>TEST</title>
+</head>
+<body>
+<h1>Upload a File</h1>
+<div>
+    <input id="uploadFile" type="file" name="fileInput">
+    <input value="Upload" onclick="uploadFile(this)">
+</div>
+<script>
+    function uploadFile(event) {
+        let elementById = document.getElementById("uploadFile");
+        const file = elementById.files[0];
+        if (file) {
+            // You can perform further actions with the selected file here
+            console.log('File selected:', file.name);
+            // Call your upload method or function here
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const contents = event.target.result;
+                console.log('File contents:', contents.length);
+                uploadFileInChunks(file, contents);
+            };
+            reader.readAsText(file);
+        }
+    }
+
+    async function uploadFileInChunks(file, content) {
+        const chunkSize = 1024; // Specify your desired chunk size
+        console.log(content);
+        const totalChunks = Math.ceil(content.length / chunkSize);
+
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, content.length);
+            const chunk = content.slice(start, end);
+            console.log('Chunk', i + 1, 'of', totalChunks, ':', chunk); // Process the chunk
+            // Perform further actions with each chunk here
+            const operation = i === 0 ? "create" : "append";
+
+            const myHeaders = new Headers();
+            myHeaders.append("cs-filename", file.name);
+            myHeaders.append("cs-operation", operation);
+            myHeaders.append("Content-Type", file.type);
+
+            const requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: chunk,
+                redirect: 'follow'
+            };
+
+            const response = await fetch("http://localhost:3000/upload-optimised/", requestOptions);
+            console.log(await response.json());
+        }
+    }
+</script>
+</body>
+</html>
