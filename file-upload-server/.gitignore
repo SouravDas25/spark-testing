@@ -39,5 +39,6 @@ gen
 .idea
 node_modules
 ./gen
-../../../Personal/blog-testing/file-upload-server/file-content
-../../../Personal/blog-testing/file-upload-server/fg
+file-content
+fg
+package-lock.json
