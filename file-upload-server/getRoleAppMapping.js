@@ -1,20 +1,12 @@
-app.post('/upload-optimised', async (req, res) => {
-    const fileName = req.headers["cs-filename"];
-    const opType = req.headers["cs-operation"];
-    const mimeType = req.headers["content-type"];
+import fs from "fs";
+import {filesize} from "filesize";
 
-    let session = await sm.getOrCreateConnection(REPOSITORY_ID, "provider");
-    let response = {success: "false"};
-
-    if (opType === "create") {
-        response = await session.createDocumentFromStream("/temp", req, fileName);
+async function writeInChunks(filename, fileSize) {
+    // writing in chunks to reduce memory usage
+    const chunkSize = Math.min(highWaterMark, fileSize);
+    for (let j = 0; j < fileSize; j += chunkSize) {
+        // write 8 mb to file
+        fs.appendFileSync(filename, generateRandomString(chunkSize));
+        console.log(`${filesize(j)} written in ${filename} `);
     }
-
-    if (opType === "append") {
-        const obj = await session.getObjectByPath("/temp/" + fileName);
-        const objId = obj.succinctProperties["cmis:objectId"];
-        response = await session.appendContentFromStream(objId, req);
-    }
-
-    res.json(response);
-});
+}

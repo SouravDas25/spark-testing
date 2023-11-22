@@ -106,7 +106,7 @@ async function main() {
         "isContentBridgeEnabled": "true",
         "externalId": "sg.com.ncs.document.demo"
     });
-    // let session = await sm.getOrCreateConnection(REPOSITORY_ID, "provider");
+    let session = await sm.getOrCreateConnection(REPOSITORY_ID, "provider");
 
 
     const app = express();

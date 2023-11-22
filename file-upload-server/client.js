@@ -3,22 +3,11 @@ const axios = require('axios');
 const fs = require("fs");
 const crypto = require("crypto");
 const {join} = require("path");
+const {filesize} = require("filesize");
 
-const chunkSize = 65 * 1024; // 65 KB
-const totalFiles = 20;
+const highWaterMark = 8 * 1024 * 1024; // 8 MB
+const totalFiles = 10;
 const totalSize = 12 * 1024 * 1024 * 1024; // 1 GB
-
-function generateRandomString(length) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let randomString = '';
-
-    for (let i = 0; i < length; i++) {
-        const randomIndex = crypto.randomInt(characters.length);
-        randomString += characters.charAt(randomIndex);
-    }
-
-    return randomString;
-}
 
 
 async function uploadFileInChunks(file, stream) {
@@ -48,42 +37,46 @@ async function uploadFiles() {
     for (const name of fs.readdirSync("./file-content")) {
         const filePath = join("./file-content", name);
         const file = {name: name, type: "plain/txt"};
-        const stream = fs.createReadStream(filePath, { highWaterMark: 8 * 1024 * 1024 });
+        const stream = fs.createReadStream(filePath, {highWaterMark: highWaterMark});
         uploadFileInChunks(file, stream);
     }
 }
 
-async function writeInChunks(filename, fileSize) {
-    const stream = fs.createWriteStream(filename);
-    const chunkSize = Math.min(fileSize / (64 * 1024), fileSize);
-    for (let j = 0; j < fileSize; j += chunkSize) {
-        stream.write(generateRandomString(chunkSize))
+function generateRandomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let randomString = '';
+    // randomizing to eleminate server side caching
+    for (let i = 0; i < length; i++) {
+        const randomIndex = crypto.randomInt(characters.length);
+        randomString += characters.charAt(randomIndex);
     }
-    stream.end(() => {
-        console.log("completed", filename)
-    });
-    // stream.close();
-    // stream.destroy();
-    console.log("closed", filename)
-    await new Promise((resolve, reject) => setTimeout(resolve, 50));
+    return randomString;
 }
 
-async function file_generator() {
-    if (fs.existsSync("./file-content")) {
-        fs.unlinkSync("./file-content", {recursive: true});
+// generate a file with the given name, with the fixed size.
+async function writeInChunks(filename, fileSize) {
+    // writing in chunks to reduce memory usage
+    const chunkSize = Math.min(highWaterMark, fileSize);
+    for (let j = 0; j < fileSize; j += chunkSize) {
+        fs.appendFileSync(filename, generateRandomString(chunkSize));
+        console.log(`${filesize(j)} written in ${filename} `);
     }
-    fs.mkdirSync("./file-content");
+}
+
+async function generateFiles() {
+    fs.mkdirSync("file-content");
+    // calculate each file size
     const fileSize = Math.ceil(totalSize / totalFiles);
-    console.log("filesize", fileSize);
     for (let i = 0; i < totalFiles; i++) {
-        const filename = `./file-content/test-file-${i}.txt`;
-        await writeInChunks(filename, fileSize);
+        const filename = join("file-content", `test-file-${i}.txt`);
+        //  write to all files in chunks concurrently
+        writeInChunks(filename, fileSize);
     }
 }
 
 async function main() {
 
-    // file_generator();
+    // generateFiles();
 
     uploadFiles();
 }

@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json (if available) to the working directory
 COPY package*.json ./
 
-COPY test.js ./
+COPY app.js ./
 COPY srv ./srv
 
 # Install the app dependencies
@@ -20,4 +20,4 @@ RUN npm install
 EXPOSE 3000
 
 # Define the command to run your Node.js server (replace 'app.js' with your entry file)
-CMD ["node", "test.js"]
+CMD ["node", "app.js"]
