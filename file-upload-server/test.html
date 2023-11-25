@@ -9,13 +9,14 @@
     <input value="Upload" onclick="uploadFile(this)">
 </div>
 <script>
+
+    // trigger when upload button is clicked
     function uploadFile(event) {
         let elementById = document.getElementById("uploadFile");
+        // get the selected file
         const file = elementById.files[0];
         if (file) {
-            // You can perform further actions with the selected file here
-            console.log('File selected:', file.name);
-            // Call your upload method or function here
+            // read the file content and upload in chunks
             const reader = new FileReader();
             reader.onload = function (event) {
                 const contents = event.target.result;
@@ -27,16 +28,24 @@
     }
 
     async function uploadFileInChunks(file, content) {
-        const chunkSize = 1024; // Specify your desired chunk size
-        console.log(content);
+        // Specify your desired chunk size
+        const chunkSize = 1024;
+
+        // console.log(content);
+
+        // total no of chunks to be uploaded, may be created a progress bar
         const totalChunks = Math.ceil(content.length / chunkSize);
 
         for (let i = 0; i < totalChunks; i++) {
+            // calculate start of the chunk
             const start = i * chunkSize;
+            // calculate end of chuck
             const end = Math.min(start + chunkSize, content.length);
+            // get the chunk from the entire content
             const chunk = content.slice(start, end);
-            console.log('Chunk', i + 1, 'of', totalChunks, ':', chunk); // Process the chunk
-            // Perform further actions with each chunk here
+            // Process the chunk
+            console.log('Chunk', i + 1, 'of', totalChunks, ':', chunk);
+            // create if first chunk or else append
             const operation = i === 0 ? "create" : "append";
 
             const myHeaders = new Headers();
@@ -51,6 +60,7 @@
                 redirect: 'follow'
             };
 
+            // upload to the server
             const response = await fetch("http://localhost:3000/upload-optimised/", requestOptions);
             console.log(await response.json());
         }

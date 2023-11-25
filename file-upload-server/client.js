@@ -1,5 +1,5 @@
 const axios = require('axios');
-
+const FormData = require('form-data');
 const fs = require("fs");
 const crypto = require("crypto");
 const {join} = require("path");
@@ -7,7 +7,7 @@ const {filesize} = require("filesize");
 
 const highWaterMark = 8 * 1024 * 1024; // 8 MB
 const totalFiles = 10;
-const totalSize = 12 * 1024 * 1024 * 1024; // 1 GB
+const totalSize = 2 * 1024 * 1024 * 1024; // 1 GB
 
 
 async function uploadFileInChunks(file, stream) {
@@ -38,8 +38,29 @@ async function uploadFiles() {
         const filePath = join("./file-content", name);
         const file = {name: name, type: "plain/txt"};
         const stream = fs.createReadStream(filePath, {highWaterMark: highWaterMark});
-        uploadFileInChunks(file, stream);
+        // uploadFileInChunks(file, stream);
+        uploadWithFormData(file, stream);
     }
+}
+
+async function uploadWithFormData(file, stream) {
+
+    let data = new FormData();
+    data.append('file', stream);
+
+    let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'http://localhost:3000/upload',
+        headers: {
+            ...data.getHeaders()
+        },
+        data: data
+    };
+
+    const response = await axios.request(config);
+    console.log(JSON.stringify(response.data));
+
 }
 
 function generateRandomString(length) {
@@ -78,7 +99,7 @@ async function main() {
 
     // generateFiles();
 
-    uploadFiles();
+    // uploadFiles();
 }
 
 main();

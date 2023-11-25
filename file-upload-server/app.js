@@ -144,6 +144,7 @@ async function main() {
             // let writeStream = fs.createWriteStream(req.file.originalname);
             let readStream = fs.createReadStream(req.file.path);
             let response = await session.createDocumentFromStream("/temp", readStream, req.file.originalname)
+            console.log("upload complete of", req.file.originalname);
 
             res.status(200).end(response.data);
         } else {
