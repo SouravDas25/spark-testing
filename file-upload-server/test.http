@@ -1,5 +1,5 @@
 ### GET request with a header
-GET http://localhost:3000/
+GET https://mitsubishi-electric-asia-pte-ltd-meap-dev-88beeq16-dev-z7f0d6b7.cfapps.ap10.hana.ondemand.com/service/zbtp_po_process/checkAuthorization()
 Accept: application/json
 
 ### POST req

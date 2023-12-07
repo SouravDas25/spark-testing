@@ -6,9 +6,12 @@ const {join} = require("path");
 const {filesize} = require("filesize");
 
 const highWaterMark = 8 * 1024 * 1024; // 8 MB
-const totalFiles = 10;
-const totalSize = 2 * 1024 * 1024 * 1024; // 1 GB
+const totalFiles = 50;
+const totalSize = 10 * 1024 * 1024 * 1024; // 1 GB
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function uploadFileInChunks(file, stream) {
     // Specify your desired chunk size
@@ -27,7 +30,19 @@ async function uploadFileInChunks(file, stream) {
             },
             data: chunk
         };
-        let response = await axios.request(config);
+        let status = 0;
+        let response;
+
+        while (status !== 200) {
+            try {
+                response = await axios.request(config);
+                status = response.status;
+            } catch (e) {
+                status = e.status;
+            }
+            await sleep(3000);
+        }
+
         console.log(response.data.succinctProperties["cmis:objectId"], response.data.succinctProperties["cmis:contentStreamFileName"]);
         i++;
     }
@@ -38,8 +53,8 @@ async function uploadFiles() {
         const filePath = join("./file-content", name);
         const file = {name: name, type: "plain/txt"};
         const stream = fs.createReadStream(filePath, {highWaterMark: highWaterMark});
-        // uploadFileInChunks(file, stream);
-        uploadWithFormData(file, stream);
+        uploadFileInChunks(file, stream);
+        // uploadWithFormData(file, stream);
     }
 }
 
@@ -99,7 +114,7 @@ async function main() {
 
     // generateFiles();
 
-    // uploadFiles();
+    uploadFiles();
 }
 
 main();

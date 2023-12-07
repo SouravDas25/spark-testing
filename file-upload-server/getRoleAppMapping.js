@@ -1,28 +1,39 @@
-app.post('/upload-optimised', async (req, res) => {
+const axios = require("axios");
 
-    // get the file metadata from custom headers.
-    const fileName = req.headers["cs-filename"];
-    const opType = req.headers["cs-operation"];
-    const mimeType = req.headers["content-type"];
+async function uploadFileInChunks(file, stream) {
+    let i = 0;
+    // loop through chuck by chunk, only load 1 chunk at a time to memory
+    for await (const chunk of stream) {
+        console.log('Chunk :', file.name, i, chunk.length);
+        // first we should create the file then append each of them.
+        const operation = i === 0 ? "create" : "append";
+        let config = {
+            method: 'post',
+            url: 'http://localhost:3000/upload-optimised/',
+            headers: {
+                'cs-filename': file.name,
+                'cs-operation': operation,
+                'Content-Type': file.type
+            },
+            data: chunk
+        };
 
-    // create or reuse the DMS session
-    let session = await sm.getOrCreateConnection(REPOSITORY_ID, "provider");
-    let response = {success: "false"};
+        let status = 0;
+        let response;
 
-    // if operation is "create" then create the document in DMS with initial chuck
-    if (opType === "create") {
-        // create a document from the response stream
-        response = await session.createDocumentFromStream("/temp", req, fileName);
+        // loop with delay until the server accepts the file.
+        while (status !== 200) {
+            try {
+                response = await axios.request(config);
+                status = response.status;
+            } catch (e) {
+                status = e.status;
+            }
+            // wait for 3s then try again
+            await sleep(3000);
+        }
+
+        console.log(response.data);
+        i++;
     }
-
-    // if operation is "append" then append the content an existing file
-    if (opType === "append") {
-        const obj = await session.getObjectByPath("/temp/" + fileName);
-        // get the object id from the object path.
-        const objId = obj.succinctProperties["cmis:objectId"];
-        // append the content to the previously created file.
-        response = await session.appendContentFromStream(objId, req);
-    }
-
-    res.json(response);
-});
+}
