@@ -1,16 +1,20 @@
 package com.github.souravdas25;
 
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Hello world!
@@ -19,35 +23,40 @@ public class App {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
+        int port = 8080;
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
-        LOGGER.info("Available processors: {}", Runtime.getRuntime().availableProcessors());
+        server.createContext("/health", exchange -> {
+            String response = "success";
+            exchange.sendResponseHeaders(200, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        });
 
-        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+        server.createContext("/test-virtual", exchange -> {
 
-            // create 10 virtual threads
-            IntStream.range(0, 100).forEach(i -> executorService.submit(() -> {
-                LOGGER.info("Virtual thread is name: {} ", Thread.currentThread());
-                LOGGER.info("Hello from virtual thread B4: #{}", i);
-                // call google.com and print the response
-                CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-                try {
-                    httpClient.execute(new HttpGet("http://www.google.com"),
-                            response -> {
-                                int statusCode = response.getStatusLine().getStatusCode();
-                                LOGGER.info("Status code #{}: {}", i, statusCode);
-                                return null;
-                            }
-                    );
-                } catch (IOException e) {
-                    LOGGER.error("Error while calling google.com", e);
-                }
-                LOGGER.info("Hello from virtual thread AF: #{}", i);
-                LOGGER.info("Virtual thread is name: {} ", Thread.currentThread());
-            }));
+            VirtualThreads virtualThreads = new VirtualThreads();
+            try {
+                List<NameValuePair> params = URLEncodedUtils.parse(exchange.getRequestURI(), StandardCharsets.UTF_8);
+                int maxThreads = Integer.valueOf(params.get(0).getValue());
+                virtualThreads.start(maxThreads);
+            } catch (Exception e) {
+                LOGGER.error("Interruption ", e);
+            }
 
-            boolean b = executorService.awaitTermination(1, TimeUnit.SECONDS);
-        }
+            String response = "success";
+            exchange.sendResponseHeaders(200, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        });
 
+        server.setExecutor(null); // creates a default executor
+        server.start();
+        LOGGER.info("Server started on port: {}", port);
     }
+
+
 }
