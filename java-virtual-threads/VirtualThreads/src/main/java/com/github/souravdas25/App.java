@@ -40,7 +40,29 @@ public class App {
             VirtualThreads virtualThreads = new VirtualThreads();
             try {
                 List<NameValuePair> params = URLEncodedUtils.parse(exchange.getRequestURI(), StandardCharsets.UTF_8);
+                LOGGER.info("Params found {}", params);
                 int maxThreads = Integer.valueOf(params.get(0).getValue());
+                LOGGER.info("maxThreads {}", maxThreads);
+                virtualThreads.start(maxThreads);
+            } catch (Exception e) {
+                LOGGER.error("Interruption ", e);
+            }
+
+            String response = "success";
+            exchange.sendResponseHeaders(200, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        });
+
+        server.createContext("/test-platform", exchange -> {
+
+            PlainThreads virtualThreads = new PlainThreads();
+            try {
+                List<NameValuePair> params = URLEncodedUtils.parse(exchange.getRequestURI(), StandardCharsets.UTF_8);
+                LOGGER.info("Params found {}", params);
+                int maxThreads = Integer.valueOf(params.get(0).getValue());
+                LOGGER.info("maxThreads {}", maxThreads);
                 virtualThreads.start(maxThreads);
             } catch (Exception e) {
                 LOGGER.error("Interruption ", e);

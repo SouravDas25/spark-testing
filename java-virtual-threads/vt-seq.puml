@@ -1,0 +1,14 @@
+@startuml
+VT1 --> PT: Mount & Call Api
+PT --> VT1: Unmount while waiting
+
+VT2 --> PT: Mount & Call Api
+PT --> VT2: Unmount while waiting
+
+VT1 --> PT: Mount & Response callback
+PT --> VT1: Unmount while return Response
+
+VT2 --> PT: Mount & Response callback
+PT --> VT2: Unmount while return Response
+
+@enduml
