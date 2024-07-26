@@ -1,0 +1,333 @@
+Success Stories
+• Full Stack Developer in JAVA, Node JS & Fiori, In-Charge of 12 microservice Apps Front-end & Backend.
+• Successfully implemented end-to-end business processes for material procurement and sale order delivery in SAP BTP Cloud, aligning with business requirements.
+• Completely managed & developed new products in SAP BTP Cloud for NCS Customer, and sold it through SAP Marketplace.
+
+• Reduced development time of new Compliance Reports By 50%, saving around 300 - 350 working days in 2021 - 2022 across 6 teams with JAVA reflection & annotation to automate compliance document generation.
+• Owner of the Java Spring Boot Microservice for Report Generation from large-scale corporate customer operational data. Responsible for the entire software development cycle including designing, development, and technical troubleshooting, maintenance and optimization.
+• Single point of contact across multi-functional teams 7 countries like France, Netherlands, Australia for consulting & developing their country-specific reports. Enabled country-specific reports with onsite teams, Australian Tax Report & other compliance reports for circular economy like Recycling, Packaging & Carbon Emissions.
+• Formulated & developed a prototype a patent-able design process to convert SQL data to NoSQL Structure or documents without writing any code, which can minimize report development cost by 20 – 30 %.
+• Designed and engineered a process to locally develop in SAP Cloud Foundry to enable faster debugging and smoother code changes by using JAVA and UI5.
+• Full Stack Developer in SAP Conversational AI – Migrated different Microsservices of Recast.AI from Kubernetes to JAVA SAP Cloud Foundry.
+
+- Led a team of 5 members for developing an in-house Hackathon Management System using Java for backend and Angular for frontend.
+
+## Story Points:
+
+## Learning Centric:
+
+- Blogs: writing blogs
+      * Learn and Be Curious: Leaders are never done learning and always seek to improve themselves.
+
+- Developed Run Generation: using the Failues
+      * Invent and Simplify: Leaders seek out ways to simplify and innovate.
+      * Think Big: Leaders create and communicate a bold direction that inspires results.
+      * Bias For Action: taking calculated risk and take more decisions.
+
+## Product Centric
+
+- BV Implementation
+      * Invent and Simplify: Leaders seek out ways to simplify and innovate.
+      * Deliver Results: Leaders focus on the key inputs for their business and deliver them with the right quality and in a timely fashion.
+
+      #### What to say:
+
+      - A new requirement came in, that the documents which are generated need to be visualized in the web page & also the user should be able to edit the data in the document from the web page itself, also this edited document needs to be submitted to the goverment, 
+            Pain Points:
+            * the user need to download the generated document, then edit the document & then upload the document to our system, to submit it to the GOV.
+            * the user cannot easily edit documents like PDF, XML & JSON. For PDF it is technically challenging, and for XML & JSON the documents are little techical to be edited by a business user.
+            * 
+      - Some additional details with the requirement are, the web view should be able to display any kind of document, PDF, XML, JSON, DOCS, XLSX, CSV, TXT etc.
+      - The user should be able to edit the entire document in the same web view and the changes should be refected in the PDF/XML/JSON/XLSX in real time etc.
+      - The user should be able to submit the edited document to government.
+      - The user should also be able to see the change log of the edited documents, like which user changed which field from & to values.
+      - The solution should be implemented so that it uses least amount of memory/cpu resources in the backend servers as a lot of users will be editing and submitting the document in parallel
+      - As this was a SAAS solution there was a restriction on the database data usage, that as we were allocated 64 - 128 GB database servers max. This was computed based on the SAAS solution fees etc.
+      - SO need a solution that would required least amount of data to be store inside the database tables.
+      - So i started brainstorming on the solution. after a lot of trial and error. 
+      - The Solution i built are as follows:
+            - the solution would require and backend to front-end and backend- changes. 
+            - i planned the solution in stages, i broke the solution in more managable smaller components, and then in each stage would be developed independently
+            and integrated together after development.
+            - i broke each non-divisible data in a document into single editable units & a path from the root of  that the user can edit and save and the change log can be maintained.
+            - these document units independent of one another, these will have unique ids, each which can have its change history.
+            - these unit can be stored inside the database in a table but will store inside a json document in S3 buckets to make it cheap.
+            - as these document unit can be very huge, eg. a document can have 100 units in it. a company/customer can generate tax reports(trial/actual) per region per reporting period, considering 4 reporting per year, a company generates 30 reports x 10 regions x 4 reporting period  = 1200 document / year / customer.
+            - we were targeting 2000 customer per region = 120 documents x 2000 customer = 2,40,000 documents / year in a region.
+            - now if we take 100 document units for document = 24 million document units or 24 million rows per year. 
+            - considering a 128 VARCHAR COLUMN (~512 bytes) used in the database to store the document unit. it would take, ~15 GB of data per region / year.
+            - the management did not want this not so useful data in the database which is very expensive.
+            - so i used a (Storage as a service) solution to store the data in file, cheap and simple.
+            - the front-end was build first, the web view should display the entire document using the document units, and the parent child relationship.
+            - beacuse of the document was broken into smaller indivual units, with the help of parent child relationship (path). very complex document structres i was able to show it.
+            - flat FORMs like label and values, tables and deep hierarchy, table inside tables, FORM inside tables all sorts of permutations.
+            - for the backend, along with the actual document, i generate a seperate document (BV DOCUMENT) which store each document unit and the path of it.
+            - this would be an addition overhead but as it is store in the doc store it would be cheap storage
+            - when ever the front end requested it the addition file would be served and all types of document could be view & edited in a single view.
+            - also when the user wants to submit the edited document, that time the original PDF, XML, WORD document can be created from the document unit and paths.
+            - after this solution was implemented, some of the another challenge is as follows
+            - another big problem which arose is that we need to update the previous logic of generating document to include the creation logic for the BV Document 
+            - this would increase the development time of the all the previous reports and any ongoing new reports, this posing a big challenge, 
+            - took this challenge also and developed a library framework that would immensly reduce the time need to generate this additional file from the exsisting document generating logic.
+            - There is different java code for each type reports which generates its respective documents, 
+            - to generate the BV document along with the original document, we need to add additional code to the existing logic & also consider this for all futur new reports.
+            - this is an additional ovehead.
+            - so to reduce this overhead i developed a libary that can easily from the exsiting logic with minimum efforts.
+            - let me explain - usually a pojo class is there which holds the data in the target structure, then this pojo is converted to the respective document using respective target format library xml, pdf, word, excel.
+            - so i developed some Java annotation and an libary method, so any developer will add this annoation to the pojo class fields and class at document unit level, then when the po is passed to the method, using the annotation and java reflection, i can extract the document unit along with the paths for the BV Document.
+            - Thus this library can be reused for each of the reports logic and with only adding the same annotation for different documents.
+            - the user were very happy to use this, was a greate selling point for our product.
+            - and due to the library we save a lot of development efforts, as  the same logic got reused to all the reports.
+            - if i didnot develop this library, then a single person would need a year work of time working 8 hours a day to add this feature in all release reports.
+
+
+      - Situation
+            A new requirement emerged to enable document visualization and editing directly on a web page. The edited documents must also be submitted to the government.
+
+      - Task
+
+            - Challenges and Pain Points:
+                  * Users currently need to download, edit, and upload documents to submit them to the government.
+                  * This process is cumbersome and introduces potential errors or delays.
+                  * user can make errors when doing calculations like total and profit amount
+                  * Editing formats like PDF are not easily editable using standard office software, and XML, JSON are technically challenging for business users.
+                  * The web view must support various document types (PDF, XML, JSON, DOCS, XLSX, CSV, TXT, etc.), The solution needs to handle a wide range of document formats commonly used in business and government contexts.
+                  * Users should be able to make edits directly within the web application and see those changes instantly without downloading files.
+                  * The solution must be resource-efficient and minimize database usage due to SaaS limitations (64-128 GB database servers). 
+                  * Given the constraints of the SaaS solution, database storage and computing resources need to be used judiciously to avoid excessive costs
+                  * Document change history to be maintained.
+                  * The Structure of the document can change with time.
+
+            - To create a solution allowing users to:
+
+                  * Visualize documents on the web page.
+                  * Edit the documents directly within the web view.
+                  * Submit the edited documents to the government.
+                  * Document Changelog to be defined.
+                  * 
+
+      - Action
+
+            - Solution Development:
+
+                  - Backend and Frontend Integration:
+                        * Planned the solution in stages, breaking it into manageable components developed independently before integration.
+
+                  - Document Breakdown:
+                        * Divided documents into single editable units with unique IDs and change history.
+                        * Stored these units in JSON documents in S3 buckets to save database space.
+                        * As it is store as JSON the ui can consume it directly.
+                        * As a document is changed, the changes are appended into a delta document.
+                        * this delta document is shown in the change log section.
+
+
+                  - Scalability Considerations:
+                        * Calculated data storage requirements, e.g., 120 million document units per year per region.
+                        * Used storage-as-a-service solutions to handle large data volumes efficiently. 
+                        * 60 Gb of data requirement per region per year
+                        * 500 reports x 10 regions x 12 reporting period  = 60,000 document / year / customer.
+                        * 2000 customer per region = 60,000 documents x 2000 customer = 120,000,000 documents / year in a region.
+                        * Average of 100 document units for document = 120 million document units or 120 million rows per year. 
+                        * 128 VARCHAR COLUMN (~512 bytes) used in the database to store the document unit. it would take, ~60 GB of data per region / year.
+
+                  - Frontend Implementation:
+                        * Built a web view to display and edit entire documents using document units and parent-child relationships.
+                        * Supported complex structures like nested tables and forms.
+                        * Flat Forms like label and values, tables and deep hierarchy, table inside tables, FORM inside tables all sorts of permutations.
+                        * when the user changes any document unit it is captured appended into a delta document, 
+                        
+
+                  - Backend Implementation:
+                        * Generated a separate document (BV Document) storing each document unit and its path.
+                        * Served this additional file to the frontend for viewing and editing.
+                        * Reconstructed original documents (PDF, XML, Word) from document units upon submission.
+                        * 
+
+                  - Library Framework Development:
+                        * Developed a library to reduce the time needed to generate BV Documents from existing document generation logic.
+                        * Created Java annotations and library methods to extract document units and paths using reflection.
+                        * Applied this library across all report types to streamline development.
+
+            - Implementation Challenges:
+
+                  * Updating existing document generation logic to include BV Document creation.
+                  * Increased development time for existing and new reports.
+                  * Developing a framework to minimize additional development efforts.
+
+            - Solution Details
+
+                  Frontend Features:
+                        Displayed entire documents using document units and parent-child relationships.
+                        Handled complex document structures like nested tables and forms.
+
+                  Backend Features:
+                        Along with the actual document, a separate BV Document was generated to store each document unit and its path.
+                        This additional file was cheap to store and was served to the frontend for viewing and editing.
+                        Upon submission, original documents (PDF, XML, Word) were recreated from document units and paths.
+
+                  Library Framework:
+                        Developed a library framework to reduce the time required for generating BV Documents.
+                        Created Java annotations and methods for extracting document units and paths using reflection.
+                        Reused this library for different reports, minimizing development efforts.
+
+            Specific Steps Taken:
+
+                  Document Units Storage:
+                        Stored document units in a database and JSON documents in S3 buckets.
+                        Example calculation: 120 million document units per region per year, using 15 GB of data storage.
+
+                  Front-End Display:
+                        Displayed complex document structures with parent-child relationships in the web view.
+
+                  BV Document Creation:
+                        Created BV Documents alongside original documents, storing each document unit and its path.
+
+                  Library Development:
+                        Developed Java annotations and library methods for extracting document units and paths.
+                        Ensured reusable logic for all reports, reducing development time.
+
+                  Scalable and Efficient Solution:
+                        Implemented a resource-efficient solution to handle large volumes of documents and users.
+
+            - Challenges Addressed:
+
+                  * Updated the existing logic to include BV Document creation.
+                  * Developed a framework to minimize development time for new and existing reports.
+                  * Created a library to streamline the extraction of document units and paths, significantly reducing overhead.
+
+      - Result
+
+            - A robust solution allowing real-time document editing and submission.
+            - Efficient use of storage and computing resources.
+            - Significantly reduced development efforts with the reusable library framework.
+            - Increased customer satisfaction and product value due to enhanced functionality.
+
+
+- Scaling the Run Generation Service
+      * Insist on the Highest Standards: Leaders continually raise the bar and drive their teams to deliver high-quality products and services.
+      * Frugality: do more with less resources
+      * Deep Drive: Leaders operate at all levels, stay connected to the details, and audit frequently.
+      * Deliver Results: Leaders focus on the key inputs for their business and deliver them with the right quality and in a timely fashion
+
+      #### What to say:
+
+      Situation:
+            When I joined the team at SAP, the MVP (Minimum Viable Product) was already developed, and the sales team was actively selling it across different regions.
+            The product's primary function was to generate tax reporting documents for government submission.
+            With a single click, the product was designed to process thousands of sales and purchase order invoices,
+            computing the tax amount to be paid to the government. with every day more and more types of government reports were added to the product, 1 report/tax type/country.
+            However, the product struggled with scaling issues. During peak loads, some of the microservices were crashing and restarting due to errors like OUT OF MEMORY and CPU quota exhaustion.
+            The existing solution used standard scaling with CPU and memory, which was insufficient. Serving static files from node js servers.
+
+            Dive Deep:
+                  Identifying the root causes of the microservices crashing (OUT OF MEMORY, CPU quota exhaustion) shows a deep dive into the technical details.
+
+      Task:
+            I was tasked with resolving this critical scaling issue. The goal was to ensure that at least 2000 customers per region,
+            each with 10 users, could generate their reports within 5 minutes.
+            Each report needed to handle an average of 1 million invoices (both purchase orders and sales orders combined) for a specific reporting period. Additionally,
+            the reports could be very large, sometimes in gigabytes, requiring them to be generated in parts to avoid exceeding main memory capacity.
+
+            Ownership:
+                  Taking responsibility for resolving the critical scaling issue demonstrates ownership of the problem.
+                  Deliver Results:
+                  The objective was clear: ensure 2000 customers per region could generate reports within 5 minutes, highlighting the importance of delivering concrete results.
+
+      Action:
+            To address the scaling problem, I proposed and implemented an event-driven master-worker architecture.
+
+            1.  Architecture Design:
+                  - Master Service (Java):
+                        Designed to accept incoming report generation requests and place jobs into a messaging queue.
+                        The master service could scale based on the number of incoming requests, memory, and CPU usage.
+                  - Worker Service (Node.js | Java):
+                        The worker service would pick jobs from the queue in FIFO (First-In-First-Out) order and process them.
+                        Node.js: Chosen for its single-threaded, event-driven, I/O-focused architecture.
+                        After analyzing the incoming request data, I determined that most reports were I/O intensive, validating the choice of Node.js.
+                        JAVA: is chosen because a lot of developer was there in SAP.
+                  - Worker Type:
+                        I analyzed and found that there were few reports which were cpu intensive and some report which needed to generate reports in gb
+                        So created different queues for different types of worker, 1 queue for IO intensive jobs, another for cpu intensive,
+                        another generating large reports.
+                        - IO intensive worker - in NODE JS (with 2 GB)
+                        - CPU intensive worker - in JAVA (with 4 GB)
+                        - large reports - in NODE JS with (with 8GB)
+            2.  Implementation:
+                  - Scaling Strategy:
+                  - The master service could scale based on the number of requests, memory, and CPU usage.
+                  - The worker service could scale based on the number of jobs in the queue, allowing a large number of parallel worker nodes to handle numerous requests.
+                  - If no jobs were there in the queue, the no of workers would downscale to 0.
+                  - Event-driven Design: This design allowed for dynamic scaling of the master and worker nodes independently based on application usage.
+                  - Worker Type and different queue made it possible to use different workers for different types of reports (IO/CPU)
+                  - for most of the jobs it goes to the nodejs worker, if a cpu intensive report comes in the queue a java worker is started by the autoscaler and the job is executed.
+
+            3.  Handling Challenges:
+
+                  - Worker Node Crashes:
+                        Implemented a dead letter queue to manage and re-trigger requests in case of worker node failures.
+                  - Long-running Jobs:
+                        Implemented an interruption trigger in each worker. After 5 minutes from the start of a job, it would interrupt the system and fail the running job
+                        if it exceeded the 5-minute threshold. A notification would be triggered after 3 failed attempts.
+                  - Job Completion:
+                        Addressed issues where jobs were picked by workers but not completed, ensuring reliable processing and job tracking.
+                        A daemon thread was created to scan the table and re-enter jobs into the queue
+                        if they were marked as picked but not completed, due to failing in the critical section.
+                  - Queue Push vs Pull Strategy:
+                        Initially used a pull strategy, where each worker pulled tasks to start executing. However,
+                        this led to the same job being picked by two workers simultaneously. Switched to a push strategy,
+                        where the queue pushed jobs to individual workers in a round-robin fashion. If a worker was free,
+                        it accepted the job and acknowledged the queue. If all workers were busy,
+                        the queue would wait 5 minutes to retry. After three attempts, the job would move to the dead queue.
+                  - Handling Transaction / Critical Section:
+                        Addressed critical sections that needed to run atomically to avoid inconsistent behavior.
+                        For example, updating job status in the database to "JOB ENQUEUED" had to be done in a DB transaction.
+                        The job was added to the queue, then the status was updated, and changes were committed to the DB.
+                        If an error occurred, the transaction was discarded.
+
+            4.  Testing and Deployment:
+                  - Conducted thorough testing to identify and close loopholes, such as jobs disappearing due to node crashes during critical sections of code or jobs never being picked from the queue.
+                  - Used K6 for load testing to ensure the workers scaled from zero to the required number.
+                  - Deployed the new architecture in the EU region. The solution ensured reliable report generation, even under high loads,
+                        with reports being generated within the required 5-minute window, even for large datasets.
+
+                  Leadership Principles:
+
+                  - Invent and Simplify:
+                  Proposing an event-driven master-worker architecture shows innovation and simplification to solve the problem.
+                  - Think Big:
+                  The solution had to handle significant loads (2000 customers, 1 million invoices per report), indicating a large-scale thinking approach.
+                  - Bias for Action:
+                  Quickly implementing a new architecture shows a proactive and swift response to the issue.
+                  - Earn Trust:
+                  Developing a reliable solution that colleagues and customers could depend on builds trust.
+                  - Learn and Be Curious:
+                  Analyzing the types of incoming requests to determine the most suitable technology (Node.js) shows a commitment to continuous learning and curiosity.
+                  - Have Backbone; Disagree and Commit:
+                  Implementing a new architecture despite potential resistance or differing opinions shows the ability to stand by a decision and commit to it.
+                  - Insist on the Highest Standards:
+                  Ensuring job completion, handling long-running jobs, and managing node crashes all demonstrate a commitment to high standards.
+
+      Result:
+            After implementing and fine-tuning the new event-driven master-worker architecture, the system stabilized and performed reliably.
+            We observed significant improvements in parallel processing and auto-scaling based on the queue length and system load.
+            We made the system self correcting in the event of failure. and made the system highly reliable.
+
+            The new architecture was deployed in the EU region, where it successfully handled 1600 customers without failure for the next three years.
+            The system efficiently processed reports, meeting the performance requirements and significantly enhancing customer satisfaction.
+            This success reinforced the product’s reliability and scalability in the market.
+
+            Leadership Principles:
+
+            - Deliver Results:
+                  Achieving the goal of processing reports efficiently and reliably for 1600 customers for three years demonstrates a clear delivery of results.
+            - Customer Obsession:
+                  The ultimate result of enhanced customer satisfaction and product reliability aligns with being obsessed with delivering a positive customer experience.
+
+## Customer Centric
+
+      - Development of entire Approval Application.
+            * Customer Obsession: Leaders start with the customer and work backwards.
+      
+      Failures:
+            - Talk about Large data generation with Runs : SQL vs NoSQL
+            * Have Backbone; Disagree and Commit: Leaders respectfully challenge decisions when they disagree, even when doing so is uncomfortable or exhausting.
