@@ -1,0 +1,128 @@
+@startuml
+|main|
+start
+:main;
+
+:async_sleep = async {
+    println!( "Hello from async function!" )
+    data = read("test.txt").await
+    println!( "file contents! {}", data )
+};
+
+|#lightblue|Executor|
+|main|
+: MY_EXECUTOR
+        .block_on( async_sleep );
+note left: global current thread executor
+
+|Executor|
+
+:task = Task::new( async_sleep , executor );
+
+|Task|
+:return Task { future: async_sleep , executor: executor };
+
+|Executor|
+
+:queue.push_back(task);
+note right: tasks in queue = 1
+'note right: add task to queue
+
+'note right: try to complete all task in the queue
+
+while (executor.hasWork()?) is (yes)
+    note right: event loop
+    :task = queue.pop_front();
+    note right: tasks in queue = 0
+
+    :waker = futures::task::waker(task.clone())
+    cx = Context::from_waker(&task_waker);
+
+    :task.poll( cx );
+    |Task|
+    :result = future.poll( cx );
+    note right: start async execution
+
+    |main|
+    :println!( "Hello from async function!" );
+    : data = read("test.txt").await;
+    :read_future = read("test.txt");
+    note right: rust state machine taking over
+
+    |Read future|
+    :return ReadFuture {
+            state: TaskState::Pending,
+            path: "test.txt",
+            buffer: Vec::new()
+    };
+
+    |main|
+    :result = read_future.poll( cx );
+    note right: rust state machine cont.
+
+    |Read future|
+    if (state == PENDING?) then (yes)
+        :executor = MY_EXECUTOR;
+        note left: executor from global context
+        :executor
+                .submit_io( path, buffer, cx.waker );
+        |Executor|
+        : io_task = IoTask::Read( path, buffer, waker)
+         io_tasks.push( io_task );
+        |Read future|
+        :return Pending;
+    else (no)
+        |Read future|
+        :data = String::from_utf8_lossy( buff );
+        :return ready( data );
+    endif
+
+    |main|
+    if (result == PENDING?) is (yes) then
+        :return result;
+    else (no)
+        :data = result.data;
+        note right: rust state machine completed
+        :println!( "file contents! {}", data );
+        :return ready();
+    endif
+
+    note right: rust state machine
+
+    |Task|
+    :return result;
+
+    |Executor|
+    ://;
+    note right: poll complete
+    note left: task is not added to the queue, will be added by waker
+
+    :executor.complete_io();
+    note right: try to complete at max 5 io task
+    note left: should be done in a separate thread // better perf
+
+    while ( io_task.isEmpty()?) is (no)
+        :io_task = io_task.pop();
+        if (io_task == READ) then (yes)
+        :bytes = fs::read(path)
+        buffer.extend(bytes);
+        else
+        :// other operations;
+        endif
+
+        :io_task.wake_by_ref();
+
+        |Task|
+        :executor.queue.push_back( task );
+        note right: tasks in queue = 1
+
+        |Executor|
+        :drop( io_task );
+    endwhile
+
+endwhile
+|main|
+:finished all task;
+
+stop
+@enduml

@@ -1,0 +1,111 @@
+@startuml
+|main|
+start
+:main;
+
+:async_sleep = async {
+    println!( "Hello from async function!" )
+    sleep( Duration::from_secs( 2 ) ).await
+};
+
+|#lightblue|Executor|
+|main|
+: MY_EXECUTOR
+        .block_on( async_sleep );
+note left: global current thread executor
+
+|Executor|
+
+:task = Task::new( async_sleep , executor );
+
+|Task|
+:return Task { future: async_sleep , executor: executor };
+
+|Executor|
+
+:queue.push_back(task);
+'note right: create new task Task::new()
+'note right: add task to queue
+
+'note right: try to complete all task in the queue
+
+while (executor.hasWork()?) is (yes)
+    note right: event loop
+    :task = queue.pop_front();
+
+    :waker = futures::task::waker(task.clone())
+    cx = Context::from_waker(&task_waker);
+
+    :task.poll( cx );
+    note right: start async execution
+    |Task|
+    :result = future.poll( cx );
+
+    | <color:green> async function </color> |
+    :println!( "Hello from async function!" );
+    : sleepFuture = sleep( Duration::from_secs( 2 ) );
+    |sleep future|
+    :SleepFuture { state: TaskState::Pending, duration } ;
+
+    | <color:green> async function </color> |
+    :sleepFuture.await;
+
+    : result = sleep.poll( cx ) ;
+    note right: rust state machine
+
+    |sleep future|
+    if (state == PENDING?) then (yes)
+        :executor = MY_EXECUTOR;
+        note left: executor from global context
+        :executor
+                .submit_timeout( duration, cx.waker );
+        |Executor|
+        : deadline = Instant::now() + duration
+         timeout_heap
+                         .push( deadline, waker );
+        |sleep future|
+        :return Pending;
+    else (no)
+        |sleep future|
+        :return ready();
+    endif
+
+    | <color:green> async function </color> |
+    if (result == PENDING?) is (yes) then
+        :return result;
+    else (no)
+        :continue execution;
+        :println!( "Completed Sleep for 2 secs!" );
+        :return Ready;
+    endif
+
+    note right: rust state machine
+
+    |Task|
+    :return result;
+
+    |Executor|
+    ://;
+    note right: poll complete
+    note left: task is not added to the queue
+
+    :executor.tick();
+    note right: try to complete all sleeping task
+
+    while (timeout_heap.peek().deadline < Instant::now() ) is (yes)
+        :timeout_task = timeout_heap.pop();
+        :timeout_task.wake_by_ref();
+
+        |Task|
+        :executor.queue.push_back( self );
+
+        |Executor|
+        :drop( timeout_task );
+    endwhile
+
+endwhile
+|main|
+:finished all task;
+
+stop
+@enduml
