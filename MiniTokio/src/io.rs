@@ -1,10 +1,9 @@
-use crate::executors::{global_executor, ThreadSafe};
-use crate::task::TaskState;
+use crate::executors::{ThreadSafe};
+use crate::task::{Task, TaskState};
 use std::cmp::min;
 use std::collections::VecDeque;
 use std::fs;
 use std::future::Future;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::task::{Poll, Waker};
@@ -78,7 +77,7 @@ impl Future for WriteFuture {
                 let io_task =
                     IoTask::WRITE(cx.waker().clone(), self.path.clone(), self.buffer.clone());
 
-                global_executor().submit_io_task(io_task);
+                Task::submit_io(cx, io_task);
 
                 Poll::Pending
             }
@@ -117,7 +116,7 @@ impl Future for ReadFuture {
                     IoTask::READ(cx.waker().clone(), self.path.clone(), self.buffer.clone());
 
                 // ask the executor to poll back after the completing the read
-                global_executor().submit_io_task(io_task);
+                Task::submit_io(cx, io_task);
 
                 self.state = TaskState::Running;
 

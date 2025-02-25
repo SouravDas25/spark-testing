@@ -6,6 +6,7 @@ mod task;
 use crate::executors::MyExecutor;
 use crate::io::{my_read, my_write};
 use std::time::Duration;
+use crate::sleep::my_sleep;
 
 async fn show_content(i: i32) {
     println!("show from async({}) function", i);
@@ -22,7 +23,7 @@ async fn write_content(i: i32) {
 
 async fn sleep(i: i32) {
     println!("sleep from async({}) function", i);
-    sleep::my_sleep(Duration::from_secs(2)).await;
+    my_sleep(Duration::from_secs(2)).await;
     println!("sleep({}) done!", i);
 }
 
@@ -35,4 +36,5 @@ fn main() {
     }
     // this will block the thread to complete all task
     executor.finish_all();
+
 }

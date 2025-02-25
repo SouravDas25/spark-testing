@@ -1,10 +1,10 @@
-use crate::task::TaskState;
+
+use crate::task::{Task, TaskState};
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::future::Future;
 use std::task::{Context, Poll, Waker};
 use std::time::{Duration, Instant};
-use crate::executors::global_executor;
 
 // Structure to hold timeout tasks
 struct TimeoutTask {
@@ -84,7 +84,7 @@ impl Future for SleepFuture {
             TaskState::Pending => {
                 self.state = TaskState::Running;
 
-                global_executor().submit_timeout(self.duration, cx.waker().clone());
+                Task::submit_timeout(cx, self.duration);
 
                 Poll::Pending
             }
